@@ -3,7 +3,8 @@ import configparser
 import time
 import praw
 import re
-
+from bs4 import Beautiful Soup
+from math import ceil
 
 def gfy_auth():
     config = configparser.ConfigParser(interpolation=None)
@@ -39,18 +40,15 @@ def praw_auth():
 
 def upload(access_token, title, url):
     upload_url = 'https://api.gfycat.com/v1/gfycats'
-    """
-     get url from praw
-     get title from praw
-     tags should be okay??
-     cut i don't even know
-    """
-
+	duration = streamable_length(url)
+	if duration > 60:
+		start = duration - 60
+		
     upload_dict = {
         'fetchUrl': url,
         'title': title,
         'tags': ['PUBG', 'Battlegrounds', 'PUBATTLEGOUNDS'],
-        'cut': {'duration': 60, 'start': 0}
+        'cut': {'duration': duration, 'start': start}
     }
 
     header = {'Authorization': access_token, 'Content-Type': 'application/json'}
@@ -119,6 +117,24 @@ def replytopost(submission, gfy_name):
     message = '(gfycat)[{}]'.format(url)
     submission.reply(message)
 
+
+def streamable_length(streamable_url):
+	r = requests.get(streamable_url)
+	soup = BeautifulSoup(r.text)
+	time = soup.find_all('script')[12]['data-duration]
+	
+	'''
+	without import math
+	if int(float(str_time)) == round(str_float(time)):
+		time = int(float(str_time))
+	else:
+		time = int(float(str_time))+1
+	'''
+	
+	# with  math
+	time = ceil(float(time))
+	
+	return time
 
 def main(reddit):
     subreddit = reddit.subreddit('pubattlegrounds')
