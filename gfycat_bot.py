@@ -3,7 +3,7 @@ import configparser
 import time
 import praw
 import re
-from bs4 import Beautiful Soup
+from bs4 import BeautifulSoup
 from math import ceil
 
 def gfy_auth():
@@ -40,10 +40,12 @@ def praw_auth():
 
 def upload(access_token, title, url):
     upload_url = 'https://api.gfycat.com/v1/gfycats'
-	duration = streamable_length(url)
-	if duration > 60:
-		start = duration - 60
-		
+    duration = streamable_length(url)
+    if duration > 60:
+        start = duration - 60
+    else:
+        start = 0
+
     upload_dict = {
         'fetchUrl': url,
         'title': title,
@@ -66,7 +68,7 @@ def upload(access_token, title, url):
 def check_status(key):
     root_status_url = 'https://api.gfycat.com/v1/gfycats/fetch/status/'
     status_url = 'https://api.gfycat.com/v1/gfycats/fetch/status/{}'.format(key)
-
+    
     try:
         r = requests.get(status_url)
         response = r.json()['task']
@@ -119,22 +121,28 @@ def replytopost(submission, gfy_name):
 
 
 def streamable_length(streamable_url):
-	r = requests.get(streamable_url)
-	soup = BeautifulSoup(r.text)
-	time = soup.find_all('script')[12]['data-duration]
-	
-	'''
-	without import math
-	if int(float(str_time)) == round(str_float(time)):
-		time = int(float(str_time))
-	else:
-		time = int(float(str_time))+1
-	'''
-	
-	# with  math
-	time = ceil(float(time))
-	
-	return time
+    r = requests.get(streamable_url)
+    soup = BeautifulSoup(r.text)
+
+    thing =  soup.find_all('script')
+    thing_len = len(thing) -3
+
+    time = thing[thing_len]['data-duration']
+    
+    '''
+    without import math
+    if int(float(str_time)) == round(str_float(time)):
+        time = int(float(str_time))
+    else:
+        time = int(float(str_time))+1
+       
+    with  math
+    time = ceil(float(time))
+    '''
+
+    time = float(time)
+
+    return time
 
 def main(reddit):
     subreddit = reddit.subreddit('pubattlegrounds')
