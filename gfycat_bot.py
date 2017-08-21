@@ -172,7 +172,7 @@ def main(reddit):
     old_ids = []
     start_time = time.time()
     while True:
-        if time.time() - start_time => 59:
+        if time.time() - start_time >= 59:
             gfy_instance,refresh_token = refresh_gfy_token(refresh_token)
             
         for submission in subreddit.hot(limit=30):
