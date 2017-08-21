@@ -59,7 +59,7 @@ def upload(access_token, title, url):
         r = requests.post(upload_url, headers=header, json=upload_dict)
         key = r.json()['gfyname']
         print('upload complete')
-    except:
+    except r.status_code != 200:
         print('could not fetch url')
 
     return key
