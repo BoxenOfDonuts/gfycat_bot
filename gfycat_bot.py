@@ -22,8 +22,10 @@ def gfy_auth():
 
     r = requests.post(auth_url, json=oauth)
     access_token = r.json()['access_token']
+    refresh_token = r.json()['refresh_token']
     print('retrieved access token')
-    return access_token
+    
+    return access_token,refresh_token
 
 
 def praw_auth():
@@ -36,6 +38,27 @@ def praw_auth():
                  password=config['praw']['password'])
     print('logged into praw')
     return reddit
+
+
+def refresh_gfy_token(refresh_token):
+    config = configparser.ConfigParser(interpolation=None)
+    config.read('config.ini')
+    auth_url = 'https://api.gfycat.com/v1/oauth/token'
+    print('refreshing access token..')
+
+    oauth = {
+        "grant_type": "refresh",
+        "client_id": config['gfycat']['client_id'],
+        "client_secret": config['gfycat']['client_secret'],
+        "refresh_token": refresh_token,
+    }
+
+    r = requests.post(auth_url, json=oauth)
+    access_token = r.json()['access_token']
+    refresh_token = r.json()['refresh_token']
+    print('refreshed access token')
+    
+    return access_token,refresh_token
 
 
 def upload(access_token, title, url):
@@ -147,7 +170,11 @@ def streamable_length(streamable_url):
 def main(reddit):
     subreddit = reddit.subreddit('pubattlegrounds')
     old_ids = []
+    start_time = time.time()
     while True:
+        if time.time() - start_time => 59:
+            gfy_instance,refresh_token = refresh_gfy_token(refresh_token)
+            
         for submission in subreddit.hot(limit=30):
             if re.search('streamable', submission.url) != None and submission.id not in old_ids:
                 gfy_name = upload(gfy_instance, submission.title, submission.url)
@@ -165,7 +192,7 @@ def main(reddit):
 
 
 reddit = praw_auth()
-gfy_instance = gfy_auth()
+gfy_instance, refresh_token = gfy_auth()
 
 if __name__ == '__main__':
     main(reddit)
