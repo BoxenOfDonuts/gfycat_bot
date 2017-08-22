@@ -25,7 +25,7 @@ def gfy_auth():
     refresh_token = r.json()['refresh_token']
     print('retrieved access token')
     
-    return access_token,refresh_token
+    return access_token #,refresh_token
 
 
 def praw_auth():
@@ -66,6 +66,7 @@ def upload(access_token, title, url):
     duration = streamable_length(url)
     if duration > 60:
         start = duration - 60
+        duration = 60
     else:
         start = 0
 
@@ -80,6 +81,7 @@ def upload(access_token, title, url):
 
     try:
         r = requests.post(upload_url, headers=header, json=upload_dict)
+        print(r.json())
         key = r.json()['gfyname']
         print('upload complete')
     except r.status_code != 200:
@@ -145,7 +147,7 @@ def replytopost(submission, gfy_name):
 
 def streamable_length(streamable_url):
     r = requests.get(streamable_url)
-    soup = BeautifulSoup(r.text)
+    soup = BeautifulSoup(r.text,'lxml')
 
     thing =  soup.find_all('script')
     thing_len = len(thing) -3
@@ -167,14 +169,16 @@ def streamable_length(streamable_url):
 
     return time
 
-def main(reddit):
+def main():
     subreddit = reddit.subreddit('pubattlegrounds')
     old_ids = []
-    start_time = time.time()
+    # for refresh token
+    #start_time = time.time()
     while True:
+        '''
         if time.time() - start_time >= 59:
             gfy_instance,refresh_token = refresh_gfy_token(refresh_token)
-            
+        '''
         for submission in subreddit.hot(limit=30):
             if re.search('streamable', submission.url) != None and submission.id not in old_ids:
                 gfy_name = upload(gfy_instance, submission.title, submission.url)
@@ -192,7 +196,8 @@ def main(reddit):
 
 
 reddit = praw_auth()
-gfy_instance, refresh_token = gfy_auth()
+#gfy_instance, refresh_token = gfy_auth()
+gfy_instance = gfy_auth()
 
 if __name__ == '__main__':
-    main(reddit)
+    main()
