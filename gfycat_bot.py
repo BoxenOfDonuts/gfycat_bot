@@ -4,7 +4,6 @@ import time
 import praw
 import re
 from bs4 import BeautifulSoup
-from math import ceil
 
 def gfy_auth():
     config = configparser.ConfigParser(interpolation=None)
@@ -153,17 +152,6 @@ def streamable_length(streamable_url):
     thing_len = len(thing) -3
 
     time = thing[thing_len]['data-duration']
-    
-    '''
-    without import math
-    if int(float(str_time)) == round(str_float(time)):
-        time = int(float(str_time))
-    else:
-        time = int(float(str_time))+1
-       
-    with  math
-    time = ceil(float(time))
-    '''
 
     time = float(time)
 
@@ -192,7 +180,6 @@ def main():
         print('sleeping 5 minutes\n')
         catpictures()
         time.sleep(300)
-    # print("\033c")
 
 
 reddit = praw_auth()
