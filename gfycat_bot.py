@@ -21,10 +21,9 @@ def gfy_auth():
 
     r = requests.post(auth_url, json=oauth)
     access_token = r.json()['access_token']
-    refresh_token = r.json()['refresh_token']
     print('retrieved access token')
     
-    return access_token #,refresh_token
+    return access_token
 
 
 def praw_auth():
@@ -80,17 +79,15 @@ def upload(access_token, title, url):
 
     try:
         r = requests.post(upload_url, headers=header, json=upload_dict)
-        print(r.json())
         key = r.json()['gfyname']
         print('upload complete')
-    except r.status_code != 200:
+    except r.status_code !=200:
         print('could not fetch url')
 
     return key
 
 
 def check_status(key):
-    root_status_url = 'https://api.gfycat.com/v1/gfycats/fetch/status/'
     status_url = 'https://api.gfycat.com/v1/gfycats/fetch/status/{}'.format(key)
     
     try:
@@ -117,7 +114,7 @@ def check_status(key):
                 print('unknwn status')
                 response = 'error'
                 break
-    except r.status_code != 200:
+    except r.status_code !=200:
         print('could not fetch url')
 
     return response
@@ -183,7 +180,6 @@ def main():
 
 
 reddit = praw_auth()
-#gfy_instance, refresh_token = gfy_auth()
 gfy_instance = gfy_auth()
 
 if __name__ == '__main__':
