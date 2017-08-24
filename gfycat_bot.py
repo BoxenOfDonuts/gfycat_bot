@@ -115,12 +115,12 @@ def main():
     subreddit = reddit.subreddit('pubattlegrounds')
     old_ids = []
     # for refresh token
-    #start_time = time.time()
+    start_time = time.time()
     while True:
-        '''
-        if time.time() - start_time >= 59:
-            gfy_instance,refresh_token = refresh_gfy_token(refresh_token)
-        '''
+
+        if time.time() - start_time >= 55:
+            gfy_instance.reauthorize_me()
+
         for submission in subreddit.hot(limit=30):
             if re.search('streamable', submission.url) != None and submission.id not in old_ids:
                 gfy_name = upload(submission.title, submission.url)
