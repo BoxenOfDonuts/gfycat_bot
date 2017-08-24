@@ -92,7 +92,6 @@ class GfyClient(object):
 
         try:
             r = requests.post(upload_url, headers=header, json=upload_dict)
-            print(r.json())
             key = r.json()['gfyname']
             print('upload complete')
         except r.status_code != 200:
