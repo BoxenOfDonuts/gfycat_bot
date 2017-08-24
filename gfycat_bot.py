@@ -4,26 +4,19 @@ import time
 import praw
 import re
 from bs4 import BeautifulSoup
+import gfycat
 
 def gfy_auth():
     config = configparser.ConfigParser(interpolation=None)
     config.read('config.ini')
-    auth_url = 'https://api.gfycat.com/v1/oauth/token'
-    print('getting access token..')
 
-    oauth = {
-        "grant_type": "password",
-        "client_id": config['gfycat']['client_id'],
-        "client_secret": config['gfycat']['client_secret'],
-        "username": config['gfycat']['username'],
-        "password": config['gfycat']['password']
-    }
+    gfy_instance = gfycat.GfyClient(client_id = config['gfycat']['client_id'],
+        client_secret = config['gfycat']['client_secret'],
+        username = config['gfycat']['username'],
+        password = config['gfycat']['password']
+    )
 
-    r = requests.post(auth_url, json=oauth)
-    access_token = r.json()['access_token']
-    print('retrieved access token')
-    
-    return access_token
+    return gfy_instance
 
 
 def praw_auth():
@@ -59,7 +52,8 @@ def refresh_gfy_token(refresh_token):
     return access_token,refresh_token
 
 
-def upload(access_token, title, url):
+def upload(title, url):
+    '''
     upload_url = 'https://api.gfycat.com/v1/gfycats'
     duration = streamable_length(url)
     if duration > 60:
@@ -83,11 +77,21 @@ def upload(access_token, title, url):
         print('upload complete')
     except r.status_code !=200:
         print('could not fetch url')
+    '''
+    duration = streamable_length(url)
+    if duration > 60:
+        start = duration - 60
+        duration = 60
+    else:
+        start = 0
+
+    key = gfy_instance.upload_from_url(url=url,title=title,duration=duration,start=start)
 
     return key
 
 
 def check_status(key):
+    '''
     status_url = 'https://api.gfycat.com/v1/gfycats/fetch/status/{}'.format(key)
     
     try:
@@ -116,6 +120,9 @@ def check_status(key):
                 break
     except r.status_code !=200:
         print('could not fetch url')
+    '''
+
+    reponse = gfy_instance.check_status(key)
 
     return response
 
