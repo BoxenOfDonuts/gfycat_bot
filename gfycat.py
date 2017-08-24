@@ -53,7 +53,6 @@ class GfyClient(object):
         except r.status_code != 200:
             print('could not get authenticate')
 
-        return self.access_token, self.refresh_token # may not need these
 
     def reauthorize_me(self):
         # to be implemented
@@ -73,7 +72,6 @@ class GfyClient(object):
         except r.status_code != 200:
             print('could not authenticate')
 
-        return self.access_token, self.refresh_token # may not need these
 
     def upload_from_url(self, url, title, start, duration):
         self.url = url
