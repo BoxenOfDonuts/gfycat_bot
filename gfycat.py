@@ -3,7 +3,7 @@ import requests
 auth_url = 'https://api.gfycat.com/v1/oauth/token'
 upload_url = 'https://api.gfycat.com/v1/gfycats'
 root_status_url = 'https://api.gfycat.com/v1/gfycats/fetch/status/'
-root_check_link_url = 'http://gfycat.com/cajax/checkUrl/'
+root_check_link_url = 'http://gfycat.com/cajax/get/'
 root_update_gfy_url = 'https://api.gfycat.com/v1/me/'
 
 '''
@@ -55,6 +55,26 @@ class GfyClient(object):
 
         return self.access_token, self.refresh_token
 
+    def reauthorize_me(self):
+        # to be implemented
+
+        oauth = {
+            "grant_type": "refresh",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "refresh_token": self.refresh_token
+        }
+
+        try:
+            r = requests.post(auth_url, json=oauth)
+            self.access_token = r.json()['access_token']
+            self.refresh_token = r.json()['refresh_token']
+            print('refreshed access token')
+        except r.status_code != 200:
+            print('could not authenticate')
+
+        return self.access_token, self.refresh_token
+
     def upload_from_url(self, url, title, start, duration):
         self.url = url
         self.title = title
@@ -99,6 +119,7 @@ class GfyClient(object):
                 response = 'error'
         except r.status_code != 200:
             print('could not fetch url')
+            response = 'error'
 
         return response
 
