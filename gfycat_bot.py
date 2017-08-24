@@ -68,9 +68,9 @@ def upload(title, url):
 def check_status(key):
     response = gfy_instance.check_status(key)
     while response != 'complete':
+        time.sleep(15)
         response = gfy_instance.check_status(key)
         if response == 'encoding':
-            time.sleep(15)
             continue
         elif response == 'error' or not response:
             break
