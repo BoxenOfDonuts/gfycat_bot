@@ -15,7 +15,7 @@ def gfy_auth():
         username = config['gfycat']['username'],
         password = config['gfycat']['password']
     )
-
+    gfy_instance.authorize_me()
     return gfy_instance
 
 
@@ -41,7 +41,7 @@ def refresh_gfy_token(refresh_token):
         "grant_type": "refresh",
         "client_id": config['gfycat']['client_id'],
         "client_secret": config['gfycat']['client_secret'],
-        "refresh_token": refresh_token,
+        "refresh_token": refresh_token
     }
 
     r = requests.post(auth_url, json=oauth)
@@ -53,31 +53,6 @@ def refresh_gfy_token(refresh_token):
 
 
 def upload(title, url):
-    '''
-    upload_url = 'https://api.gfycat.com/v1/gfycats'
-    duration = streamable_length(url)
-    if duration > 60:
-        start = duration - 60
-        duration = 60
-    else:
-        start = 0
-
-    upload_dict = {
-        'fetchUrl': url,
-        'title': title,
-        'tags': ['PUBG', 'Battlegrounds', 'PUBATTLEGOUNDS'],
-        'cut': {'duration': duration, 'start': start}
-    }
-
-    header = {'Authorization': access_token, 'Content-Type': 'application/json'}
-
-    try:
-        r = requests.post(upload_url, headers=header, json=upload_dict)
-        key = r.json()['gfyname']
-        print('upload complete')
-    except r.status_code !=200:
-        print('could not fetch url')
-    '''
     duration = streamable_length(url)
     if duration > 60:
         start = duration - 60
@@ -91,39 +66,14 @@ def upload(title, url):
 
 
 def check_status(key):
-    '''
-    status_url = 'https://api.gfycat.com/v1/gfycats/fetch/status/{}'.format(key)
-    
-    try:
-        r = requests.get(status_url)
-        response = r.json()['task']
-
-        while response != 'complete':
-            r = requests.get(status_url)
-            response = r.json()['task']
-
-            if response == "encoding":
-                print('encoding')
-                time.sleep(30)
-                continue
-            elif response == 'complete':
-                print('gfycat complete! Gfyname: {}'.format(key))
-            elif response == 'NotFoundo':
-                print('gfycat not found, something went wrong')
-                break
-            elif response == 'error':
-                print('Something went wrong uploading url')
-                break
-            else:
-                print('unknwn status')
-                response = 'error'
-                break
-    except r.status_code !=200:
-        print('could not fetch url')
-    '''
-
-    reponse = gfy_instance.check_status(key)
-
+    response = gfy_instance.check_status(key)
+    while response != 'complete':
+        response = gfy_instance.check_status(key)
+        if response == 'encoding':
+            time.sleep(15)
+            continue
+        elif response == 'error' or not response:
+            break
     return response
 
 
@@ -173,7 +123,7 @@ def main():
         '''
         for submission in subreddit.hot(limit=30):
             if re.search('streamable', submission.url) != None and submission.id not in old_ids:
-                gfy_name = upload(gfy_instance, submission.title, submission.url)
+                gfy_name = upload(submission.title, submission.url)
 
                 if check_status(gfy_name) == 'complete':
                     sendmessage(submission.title, submission.url, submission.shortlink, gfy_name)
