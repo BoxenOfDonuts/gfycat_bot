@@ -98,7 +98,7 @@ def main():
     start_time = time.time()
     while True:
 
-        if time.time() - start_time >= 55:
+        if time.time() - start_time >= 5500:
             gfy_instance.reauthorize_me()
             start_time = time.time()
 
