@@ -28,28 +28,8 @@ def praw_auth():
                  username=config['praw']['username'],
                  password=config['praw']['password'])
     print('logged into praw')
-    return reddit
-
-
-def refresh_gfy_token(refresh_token):
-    config = configparser.ConfigParser(interpolation=None)
-    config.read('config.ini')
-    auth_url = 'https://api.gfycat.com/v1/oauth/token'
-    print('refreshing access token..')
-
-    oauth = {
-        "grant_type": "refresh",
-        "client_id": config['gfycat']['client_id'],
-        "client_secret": config['gfycat']['client_secret'],
-        "refresh_token": refresh_token
-    }
-
-    r = requests.post(auth_url, json=oauth)
-    access_token = r.json()['access_token']
-    refresh_token = r.json()['refresh_token']
-    print('refreshed access token')
     
-    return access_token,refresh_token
+    return reddit
 
 
 def upload(title, url):
@@ -120,6 +100,7 @@ def main():
 
         if time.time() - start_time >= 55:
             gfy_instance.reauthorize_me()
+            start_time = time.time()
 
         for submission in subreddit.hot(limit=30):
             if re.search('streamable', submission.url) != None and submission.id not in old_ids:
