@@ -97,8 +97,8 @@ def main():
     # for refresh token
     start_time = time.time()
     while True:
-
-        if time.time() - start_time >= 5500:
+        # 3300 seconds = 55 minutes
+        if time.time() - start_time >= 3300:
             gfy_instance.reauthorize_me()
             start_time = time.time()
 
