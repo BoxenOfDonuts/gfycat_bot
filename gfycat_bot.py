@@ -117,7 +117,9 @@ def main():
             time.sleep(300)
         except:
             # to do
-            print('error with praw')
+            print('error with praw, sleeping then restarting')
+            time.sleep(10)
+            continue
 
 
 reddit = praw_auth()
