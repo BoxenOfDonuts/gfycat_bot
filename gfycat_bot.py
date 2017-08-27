@@ -74,8 +74,20 @@ def sendmessage(title, url, shortlink, gfy_name):
 
 def replytopost(submission, gfy_name):
     url = 'https://www.gfycat.com/' + gfy_name
-    message = '(gfycat)[{}]'.format(url)
-    submission.reply(message)
+    #message = '(gfycat)[{}]'.format(url)
+    message = """[GfycatUrl]({})\n\n*** \n
+                Why am I mirroring to gfycat? Because work blocks streamables"""
+    while True:
+        try:
+            submisison.reply(message)
+            print('commented!')
+            break
+        except praw.exceptions.APIException as e:
+            print('hit rate limit ' + e.message)
+            time.sleep(60)
+        except prawcore.exceptions.Forbidden as e:
+            print('got banned :(')
+            break
 
 
 def streamable_length(streamable_url):
@@ -108,12 +120,11 @@ def main():
 
                     if check_status(gfy_name) == 'complete':
                         sendmessage(submission.title, submission.url, submission.shortlink, gfy_name)
-                        # replytopost(submission,
+                        replytopost(submission.id,gfy_name)
 
                     old_ids.append(submission.id)
 
             print('sleeping 5 minutes\n')
-            #catpictures()
             time.sleep(300)
         except:
             # to do
