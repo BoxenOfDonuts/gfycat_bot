@@ -4,7 +4,7 @@ auth_url = 'https://api.gfycat.com/v1/oauth/token'
 upload_url = 'https://api.gfycat.com/v1/gfycats'
 root_status_url = 'https://api.gfycat.com/v1/gfycats/fetch/status/'
 root_check_link_url = 'http://gfycat.com/cajax/get/'
-root_update_gfy_url = 'https://api.gfycat.com/v1/me/'
+root_update_gfy_url = 'https://api.gfycat.com/v1/me/gfycats/'
 
 '''
 class AuthWrapper(object):
