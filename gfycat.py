@@ -126,7 +126,11 @@ class GfyClient(object):
 
         try:
             r = requests.delete(url, headers=header)
-            print('gfy deleted')
+            # no response if sucessful, so if I get something back its an error
+            if r.text:
+                return r.json()['errorMessage']['description']
+            else:
+                print("Deleted Gfy")
         except r.status_code != 200:
             print('error')
 
