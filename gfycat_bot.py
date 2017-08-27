@@ -28,7 +28,7 @@ def praw_auth():
                  username=config['praw']['username'],
                  password=config['praw']['password'])
     print('logged into praw')
-    
+
     return reddit
 
 
@@ -97,24 +97,27 @@ def main():
     # for refresh token
     start_time = time.time()
     while True:
-        # 3300 seconds = 55 minutes
-        if time.time() - start_time >= 3300:
-            gfy_instance.reauthorize_me()
-            start_time = time.time()
+        try:
+            if time.time() - start_time >= 3300:
+                gfy_instance.reauthorize_me()
+                start_time = time.time()
 
-        for submission in subreddit.hot(limit=30):
-            if re.search('streamable', submission.url) != None and submission.id not in old_ids:
-                gfy_name = upload(submission.title, submission.url)
+            for submission in subreddit.hot(limit=30):
+                if re.search('streamable', submission.url) != None and submission.id not in old_ids:
+                    gfy_name = upload(submission.title, submission.url)
 
-                if check_status(gfy_name) == 'complete':
-                    sendmessage(submission.title, submission.url, submission.shortlink, gfy_name)
-                    # replytopost(submission,
+                    if check_status(gfy_name) == 'complete':
+                        sendmessage(submission.title, submission.url, submission.shortlink, gfy_name)
+                        # replytopost(submission,
 
-                old_ids.append(submission.id)
+                    old_ids.append(submission.id)
 
-        print('sleeping 5 minutes\n')
-        catpictures()
-        time.sleep(300)
+            print('sleeping 5 minutes\n')
+            #catpictures()
+            time.sleep(300)
+        except:
+            # to do
+            print('error with praw')
 
 
 reddit = praw_auth()
