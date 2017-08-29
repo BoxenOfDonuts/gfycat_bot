@@ -2,6 +2,7 @@ import requests
 import configparser
 import time
 import praw
+import prawcore
 import re
 from bs4 import BeautifulSoup
 import gfycat
@@ -9,13 +10,13 @@ import gfycat
 def gfy_auth():
     config = configparser.ConfigParser(interpolation=None)
     config.read('config.ini')
-
     gfy_instance = gfycat.GfyClient(client_id = config['gfycat']['client_id'],
         client_secret = config['gfycat']['client_secret'],
         username = config['gfycat']['username'],
         password = config['gfycat']['password']
     )
     gfy_instance.authorize_me()
+	
     return gfy_instance
 
 
@@ -55,54 +56,41 @@ def check_status(key):
         elif response == 'error' or not response:
             break
     return response
-
-
-def catpictures():
-    print("\
-   |\      _,,,---,,_\n\
-   /,`.-'`'    -.  ;-;;,_\n\
-  |,4-  ) )-,_..;\ (  `'-'\n\
- '---''(_/--'  `-'\_)")
-
-
-def sendmessage(title, url, shortlink, gfy_name):
-    gfy_url = 'https://www.gfycat.com/' + gfy_name # temporary
-    print('sending message')
-    message = 'Title: {} URL: {} Comment URL: {} gfycat: {}'.format(title, url, shortlink, gfy_url)
-    reddit.redditor('BoxenOfDonuts').message('link', message)
-
-
+	
 def replytopost(submission, gfy_name):
     url = 'https://www.gfycat.com/' + gfy_name
     #message = '(gfycat)[{}]'.format(url)
-    message = """[GfycatUrl]({})\n\n*** \n
-                Why am I mirroring to gfycat? Because work blocks streamables"""
+    message = "[Gfycat Url]({})\n\n" \
+                "***\n\n" \
+                "^Why ^am ^I ^mirroring ^to ^gfycat? ^Because ^work ^blocks ^streamables".format(url)
     while True:
         try:
-            submisison.reply(message)
+            submission.reply(message)
             print('commented!')
             break
         except praw.exceptions.APIException as e:
             print('hit rate limit ' + e.message)
             time.sleep(60)
-        except prawcore.exceptions.Forbidden as e:
-            print('got banned :(')
+            continue
+        except prawcore.exceptions.Forbidden as e: # probably banned if I get this
+            print('praw exception ' + e.message)
             break
-
+        except:
+            break
 
 def streamable_length(streamable_url):
     r = requests.get(streamable_url)
     soup = BeautifulSoup(r.text,'lxml')
 
-    thing =  soup.find_all('script')
-    thing_len = len(thing) -3
+    html =  soup.find_all('script')
+    html_len = len(html) -3
 
-    time = thing[thing_len]['data-duration']
+    streamable_len = html[html_len]['data-duration']
 
-    time = float(time)
+    streamable_len = float(streamable_len)
 
-    return time
-
+    return streamable_len
+	
 def main():
     subreddit = reddit.subreddit('pubattlegrounds')
     old_ids = []
@@ -119,15 +107,12 @@ def main():
                     gfy_name = upload(submission.title, submission.url)
 
                     if check_status(gfy_name) == 'complete':
-                        sendmessage(submission.title, submission.url, submission.shortlink, gfy_name)
-                        replytopost(submission.id,gfy_name)
-
-                    old_ids.append(submission.id)
-
+                        old_ids.append(submission.id)
+                        replytopost(submission, gfy_name)
+						
             print('sleeping 5 minutes\n')
             time.sleep(300)
-        except:
-            # to do
+        except prawcore.exceptions.ServerError:
             print('error with praw, sleeping then restarting')
             time.sleep(10)
             continue
