@@ -16,7 +16,7 @@ def gfy_auth():
         password = config['gfycat']['password']
     )
     gfy_instance.authorize_me()
-	
+
     return gfy_instance
 
 
@@ -46,17 +46,45 @@ def upload(title, url):
     return key
 
 
+def check_if_commented(submisison):
+    # checks the submission to see if i've commented
+    for comment in submisison.comments:
+        if comment.author == 'to_gfycat_bot':
+            return True
+        return False
+
+
+def old_submission_ids():
+    old_ids = []
+    me = reddit.redditor('to_gfycat_bot')
+    for comment in me.comments.new(limit=None):
+        old_ids.append(comment.submission.id)
+
+    print('retrieved old ids')
+    return old_ids
+
+
 def check_status(key):
+    #tripped = False # sometimes loop goes too fast and it won't find it first check
     response = gfy_instance.check_status(key)
     while response != 'complete':
-        time.sleep(15)
+        time.sleep(30)
         response = gfy_instance.check_status(key)
         if response == 'encoding':
             continue
+        elif response == 'NotFoundo':
+            ''' commenting out, hopefully won't need
+            if tripped == True:
+                break
+            else:
+                tripped = True:
+            continue
+            '''
+            break
         elif response == 'error' or not response:
             break
     return response
-	
+
 def replytopost(submission, gfy_name):
     url = 'https://www.gfycat.com/' + gfy_name
     #message = '(gfycat)[{}]'.format(url)
@@ -90,10 +118,10 @@ def streamable_length(streamable_url):
     streamable_len = float(streamable_len)
 
     return streamable_len
-	
+
 def main():
     subreddit = reddit.subreddit('pubattlegrounds')
-    old_ids = []
+    old_ids = old_submission_ids()
     # for refresh token
     start_time = time.time()
     while True:
@@ -109,11 +137,15 @@ def main():
                     if check_status(gfy_name) == 'complete':
                         old_ids.append(submission.id)
                         replytopost(submission, gfy_name)
-						
-            print('sleeping 5 minutes\n')
+
+            print('sleeping 5 minutes')
             time.sleep(300)
-        except prawcore.exceptions.ServerError:
+        except prawcore.exceptions.ServerError as e:
             print('error with praw, sleeping then restarting')
+            time.sleep(10)
+            continue
+        except prawcore.exceptions.RequestException as e:
+            print('reques exception {}'.format(e))
             time.sleep(10)
             continue
 
