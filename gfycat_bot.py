@@ -145,11 +145,9 @@ def main():
     except prawcore.exceptions.ServerError as e:
         print('error with praw, sleeping then restarting')
         time.sleep(10)
-        continue
     except prawcore.exceptions.RequestException as e:
         print('request exception {}'.format(e))
         time.sleep(10)
-        continue
 
 
 reddit = praw_auth()
