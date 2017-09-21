@@ -5,7 +5,7 @@ import praw
 import prawcore
 import re
 from bs4 import BeautifulSoup
-import gfy_test as gfycat
+import gfycat
 
 def gfy_auth():
     config = configparser.ConfigParser(interpolation=None)
