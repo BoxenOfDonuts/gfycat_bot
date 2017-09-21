@@ -8,19 +8,6 @@ root_check_link_url = 'http://gfycat.com/cajax/get/'
 root_update_gfy_url = 'https://api.gfycat.com/v1/me/gfycats/'
 root_md5_url = 'http://gfycat.com/cajax/checkUrl/'
 
-'''
-class AuthWrapper(object):
-    def __init__(self, client_id, client_secret, username, password):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.username = username
-        self.password = password
-        self.refresh_token = None
-        if client_id is None:
-            raise TypeError('client id required')
-        if client_secret is None:
-            raise TypeError('client secret is required')
-'''
 
 class GfyClient(object):
     def __init__(self, client_id, client_secret, username, password):
@@ -36,6 +23,21 @@ class GfyClient(object):
         if client_secret is None:
             raise TypeError('client secret is required')
 
+        oauth = {
+            "grant_type": "password",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "username": self.username,
+            "password": self.password
+        }
+        try:
+            r = requests.post(auth_url, json=oauth)
+            self.access_token = r.json()['access_token']
+            self.refresh_token = r.json()['refresh_token']
+            print('retrieved access token')
+        except requests.exceptions.RequestException as e:
+            print('could not get authenticate')
+
     def authorize_me(self):
 
         oauth = {
@@ -50,7 +52,7 @@ class GfyClient(object):
             self.access_token = r.json()['access_token']
             self.refresh_token = r.json()['refresh_token']
             print('retrieved access token')
-        except r.status_code != 200:
+        except requests.exceptions.RequestException as e:
             print('could not get authenticate')
 
 
@@ -69,7 +71,7 @@ class GfyClient(object):
             self.access_token = r.json()['access_token']
             self.refresh_token = r.json()['refresh_token']
             print('refreshed access token')
-        except r.status_code != 200:
+        except requests.exceptions.RequestException as e:
             print('could not authenticate')
 
 
@@ -88,6 +90,7 @@ class GfyClient(object):
             key = r.json()['gfyname']
         except requests.exceptions.RequestException as e:
             print('could not get key')
+            print('exception: {}'.format(e))
             return
 
         try:
@@ -128,7 +131,7 @@ class GfyClient(object):
             r = requests.post(upload_url, headers=header, json=upload_dict)
             key = r.json()['gfyname']
             print('upload sucessfull')
-        except r.status_code != 200:
+        except requests.exceptions.RequestException as e:
             print('could not fetch url')
 
         return key
@@ -150,7 +153,7 @@ class GfyClient(object):
             else:
                 print('unknwn status')
                 response = 'error'
-        except r.status_code != 200:
+        except requests.exceptions.RequestException as e:
             print('could not fetch url')
             response = 'error'
 
@@ -166,7 +169,7 @@ class GfyClient(object):
                 return r.json()['errorMessage']['description']
             else:
                 print("Deleted Gfy")
-        except r.status_code != 200:
+        except requests.exceptions.RequestException as e:
             print('error')
 
     def check_link(self, key):
@@ -174,7 +177,7 @@ class GfyClient(object):
         try:
             r = requests.get(url)
             return r.json()
-        except r.status_code != 200:
+        except requests.exceptions.RequestException as e:
             print('error getting url')
 
 
@@ -185,5 +188,5 @@ class GfyClient(object):
         try:
             r = requests.get(url)
             return r.json()
-        except r.status_code != 200:
+        except requests.exceptions.RequestException as e:
             print('error')
