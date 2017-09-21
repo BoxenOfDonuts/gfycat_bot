@@ -5,7 +5,7 @@ import praw
 import prawcore
 import re
 from bs4 import BeautifulSoup
-import gfycat
+import gfy_test as gfycat
 
 def gfy_auth():
     config = configparser.ConfigParser(interpolation=None)
@@ -15,7 +15,8 @@ def gfy_auth():
         username = config['gfycat']['username'],
         password = config['gfycat']['password']
     )
-    gfy_instance.authorize_me()
+    #removing for gfy_test
+    #gfy_instance.authorize_me()
 
     return gfy_instance
 
@@ -123,13 +124,14 @@ def main():
     subreddit = reddit.subreddit('pubattlegrounds')
     old_ids = old_submission_ids()
     # for refresh token
-    start_time = time.time()
+    #start_time = time.time() # removed for cron
     while True:
         try:
+            '''  removed for cron
             if time.time() - start_time >= 3300:
                 gfy_instance.reauthorize_me()
                 start_time = time.time()
-
+            '''
             for submission in subreddit.hot(limit=30):
                 if re.search('streamable', submission.url) != None and submission.id not in old_ids:
                     gfy_name = upload(submission.title, submission.url)
@@ -137,15 +139,16 @@ def main():
                     if check_status(gfy_name) == 'complete':
                         old_ids.append(submission.id)
                         replytopost(submission, gfy_name)
-
+            ''' removed for cron
             print('sleeping 5 minutes')
             time.sleep(300)
+            '''
         except prawcore.exceptions.ServerError as e:
             print('error with praw, sleeping then restarting')
             time.sleep(10)
             continue
         except prawcore.exceptions.RequestException as e:
-            print('reques exception {}'.format(e))
+            print('request exception {}'.format(e))
             time.sleep(10)
             continue
 
