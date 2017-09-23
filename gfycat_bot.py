@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import requests
 import configparser
 import time
@@ -6,10 +9,12 @@ import prawcore
 import re
 from bs4 import BeautifulSoup
 import gfycat
+import os
 
 def gfy_auth():
     config = configparser.ConfigParser(interpolation=None)
-    config.read('config.ini')
+    configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
+    config.read(configfile)
     gfy_instance = gfycat.GfyClient(client_id = config['gfycat']['client_id'],
         client_secret = config['gfycat']['client_secret'],
         username = config['gfycat']['username'],
@@ -23,7 +28,8 @@ def gfy_auth():
 
 def praw_auth():
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
+    config.read(configfile)
     reddit = praw.Reddit(client_id=config['praw']['client_id'],
                  client_secret=config['praw']['client_secret'],
                  user_agent='python:nourl:v0.01 by /u/BoxenOfDonuts',
