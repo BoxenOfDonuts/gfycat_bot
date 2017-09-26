@@ -64,7 +64,7 @@ def check_if_commented(submisison):
 def old_submission_ids():
     old_ids = []
     me = reddit.redditor('to_gfycat_bot')
-    for comment in me.comments.new(limit=None):
+    for comment in me.comments.new(limit=30):
         old_ids.append(comment.submission.id)
 
     print('retrieved old ids')
