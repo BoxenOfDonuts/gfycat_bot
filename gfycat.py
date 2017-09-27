@@ -78,7 +78,7 @@ class GfyClient(object):
 
     def upload_from_file(self,file):
         self.file = file
-		title = kwargs.get('title',None)
+        title = kwargs.get('title',None)
         start  = kwargs.get('start',None)
         duration  = kwargs.get('duration',None)
         tags = kwargs.get('tags',None)
