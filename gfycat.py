@@ -38,6 +38,7 @@ class GfyClient(object):
         except requests.exceptions.RequestException as e:
             print('could not get authenticate')
 
+
     def authorize_me(self):
 
         oauth = {
@@ -75,14 +76,21 @@ class GfyClient(object):
             print('could not authenticate')
 
 
-    def upload_from_file(self,file,title):
+    def upload_from_file(self,file):
         self.file = file
-        self.title = title
+		title = kwargs.get('title',None)
+        start  = kwargs.get('start',None)
+        duration  = kwargs.get('duration',None)
+        tags = kwargs.get('tags',None)
 
         upload_dict = {
-            'title':title,
-            'tags':['PUBG', 'Battlegrounds', 'PUBATTLEGOUNDS'],
+            'fetchUrl':url,
         }
+        if title != None:
+            upload_dict.update({'title':title})
+        if tags != None:
+            upload_dict.update({'tags':tags})
+
         header = {'Authorization': self.access_token, 'Content-Type': 'application/json'}
 
         try:
@@ -112,18 +120,23 @@ class GfyClient(object):
 
         return key
 
-    def upload_from_url(self, url, title, start, duration):
+
+    def upload_from_url(self, url, **kwargs):
         self.url = url
-        self.title = title
-        self.start = start
-        self.duration = duration
+        title = kwargs.get('title',None)
+        start  = kwargs.get('start',None)
+        duration  = kwargs.get('duration',None)
+        tags = kwargs.get('tags',None)
 
         upload_dict = {
-            'fetchUrl': url,
-            'title': title,
-            'tags': ['PUBG', 'Battlegrounds', 'PUBATTLEGOUNDS'],
-            'cut': {'duration': duration, 'start': start}
+            'fetchUrl':url,
         }
+        if title != None:
+            upload_dict.update({'title':title})
+        if start != None:
+            upload_dict.update({'cut':{'duration':duration,'start':start}})
+        if tags != None:
+            upload_dict.update({'tags':tags})
 
         header = {'Authorization': self.access_token, 'Content-Type': 'application/json'}
 
@@ -135,6 +148,7 @@ class GfyClient(object):
             print('could not fetch url')
 
         return key
+
 
     def check_status(self, key):
         status_url = root_status_url + key
@@ -159,7 +173,9 @@ class GfyClient(object):
 
         return response
 
+
     def delete_gfy(self, key):
+        # need gfyname, not link
         url = root_update_gfy_url + key
         header = {'Authorization': self.access_token, 'Content-Type': 'application/json'}
         try:
@@ -172,7 +188,9 @@ class GfyClient(object):
         except requests.exceptions.RequestException as e:
             print('error')
 
-    def check_link(self, key):
+
+    def check_gfy(self, key):
+        # need gfyname, not full link
         url = root_check_link_url + key
         try:
             r = requests.get(url)
