@@ -43,7 +43,7 @@ def praw_auth():
     return reddit
 
 
-def upload(title, url,subreddit):
+def upload(title, url, subreddit):
     duration = streamable_length(url)
     if duration > 60:
         start = duration - 60
@@ -72,6 +72,7 @@ def check_if_commented(submisison):
 
 
 def old_submission_ids():
+    # retieves old submission ids that commented on
     old_ids = []
     me = reddit.redditor('to_gfycat_bot')
     for comment in me.comments.new(limit=30):
@@ -83,7 +84,7 @@ def old_submission_ids():
 
 
 def check_status(key):
-    #tripped = False # sometimes loop goes too fast and it won't find it first check
+    # check status of the upload
     response = gfy_instance.check_status(key)
     while response != 'complete':
         time.sleep(30)
@@ -91,13 +92,6 @@ def check_status(key):
         if response == 'encoding':
             continue
         elif response == 'NotFoundo':
-            ''' commenting out, hopefully won't need
-            if tripped == True:
-                break
-            else:
-                tripped = True:
-            continue
-            '''
             break
         elif response == 'error' or not response:
             break
@@ -105,8 +99,8 @@ def check_status(key):
     return response
 
 def replytopost(submission, gfy_name):
+    # does what it looks like it does
     url = 'https://www.gfycat.com/' + gfy_name
-    #message = '(gfycat)[{}]'.format(url)
     message = "[Gfycat Url]({})\n\n" \
                 "***\n\n" \
                 "^Why ^am ^I ^mirroring ^to ^gfycat? ^Because ^work ^blocks ^streamables".format(url)
@@ -126,6 +120,7 @@ def replytopost(submission, gfy_name):
             break
 
 def streamable_length(streamable_url):
+    # get lenght of the streamable and returns it
     r = requests.get(streamable_url)
     soup = BeautifulSoup(r.text,'lxml')
 
@@ -139,6 +134,7 @@ def streamable_length(streamable_url):
     return streamable_len
 
 def in_bad_list(sub_title):
+    # checks to see if the title matches bad titles
     for title in bad_list:
         if title in sub_title.lower():
             print('streamable in do not comment list!')
@@ -149,14 +145,9 @@ def in_bad_list(sub_title):
 def main():
     subreddit = reddit.subreddit('pubattlegrounds')
     old_ids = old_submission_ids()
-    # for refresh token
-    #start_time = time.time() # removed for cron
+
     try:
-        '''  removed for cron
-        if time.time() - start_time >= 3300:
-            gfy_instance.reauthorize_me()
-            start_time = time.time()
-        '''
+
         for submission in subreddit.hot(limit=30):
             if re.search('streamable', submission.url) != None and submission.id not in old_ids and not in_bad_list(submission.title):
                 gfy_name = upload(submission.title, submission.url, submission.subreddit)
@@ -165,10 +156,6 @@ def main():
                     old_ids.append(submission.id)
                     replytopost(submission, gfy_name)
 
-        ''' removed for cron
-        print('sleeping 5 minutes')
-        time.sleep(300)
-        '''
     except prawcore.exceptions.ServerError as e:
         print('error with praw, sleeping then restarting')
         time.sleep(10)
