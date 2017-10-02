@@ -76,7 +76,7 @@ class GfyClient(object):
             print('could not authenticate')
 
 
-    def upload_from_file(self,file):
+    def upload_from_file(self, file, **kwargs):
         self.file = file
         title = kwargs.get('title',None)
         start  = kwargs.get('start',None)
@@ -200,7 +200,7 @@ class GfyClient(object):
 
 
     # Don't think this works anymore
-    def check_url(self,url):
+    def check_url(self, url):
         formated_url = requests.utils.quote(url)
         url = root_md5_url + formated_url
         try:
