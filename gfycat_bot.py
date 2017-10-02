@@ -11,24 +11,27 @@ from bs4 import BeautifulSoup
 import gfycat
 import os
 
+
+###### Globals ######
+
+bad_list = ['jay and dan']
+config = configparser.ConfigParser(interpolation=None)
+configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
+
+### end Globals #####
+
 def gfy_auth():
-    config = configparser.ConfigParser(interpolation=None)
-    configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
     config.read(configfile)
     gfy_instance = gfycat.GfyClient(client_id = config['gfycat']['client_id'],
         client_secret = config['gfycat']['client_secret'],
         username = config['gfycat']['username'],
         password = config['gfycat']['password']
     )
-    #removing for gfy_test
-    #gfy_instance.authorize_me()
 
     return gfy_instance
 
 
 def praw_auth():
-    config = configparser.ConfigParser()
-    configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
     config.read(configfile)
     reddit = praw.Reddit(client_id=config['praw']['client_id'],
                  client_secret=config['praw']['client_secret'],
@@ -40,7 +43,7 @@ def praw_auth():
     return reddit
 
 
-def upload(title, url):
+def upload(title, url,subreddit):
     duration = streamable_length(url)
     if duration > 60:
         start = duration - 60
@@ -48,7 +51,14 @@ def upload(title, url):
     else:
         start = 0
 
-    key = gfy_instance.upload_from_url(url=url,title=title,duration=duration,start=start)
+    if subreddit == 'pubattelgrounds':
+        tags = ['PUBG', 'Battlegrounds', 'PUBATTLEGOUNDS']
+    elif subreddit == 'hockey':
+        tags = ['hockey']
+    elif subreddit == 'stlouisblues':
+        tags = ['hockey','St. Louis Blues']
+
+    key = gfy_instance.upload_from_url(url=url,title=title,duration=duration,start=start,tags=tags)
 
     return key
 
@@ -68,6 +78,7 @@ def old_submission_ids():
         old_ids.append(comment.submission.id)
 
     print('retrieved old ids')
+
     return old_ids
 
 
@@ -90,6 +101,7 @@ def check_status(key):
             break
         elif response == 'error' or not response:
             break
+
     return response
 
 def replytopost(submission, gfy_name):
@@ -126,6 +138,14 @@ def streamable_length(streamable_url):
 
     return streamable_len
 
+def in_bad_list(sub_title):
+    for title in bad_list:
+        if title in sub_title.lower():
+            print('streamable in do not comment list!')
+            return True
+        else:
+            return False
+
 def main():
     subreddit = reddit.subreddit('pubattlegrounds')
     old_ids = old_submission_ids()
@@ -138,12 +158,13 @@ def main():
             start_time = time.time()
         '''
         for submission in subreddit.hot(limit=30):
-            if re.search('streamable', submission.url) != None and submission.id not in old_ids:
-                gfy_name = upload(submission.title, submission.url)
+            if re.search('streamable', submission.url) != None and submission.id not in old_ids and not in_bad_list(submission.title):
+                gfy_name = upload(submission.title, submission.url, submission.subreddit)
 
                 if check_status(gfy_name) == 'complete':
                     old_ids.append(submission.id)
                     replytopost(submission, gfy_name)
+
         ''' removed for cron
         print('sleeping 5 minutes')
         time.sleep(300)
