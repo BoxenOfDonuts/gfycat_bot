@@ -84,7 +84,7 @@ class GfyClient(object):
         tags = kwargs.get('tags',None)
 
         upload_dict = {
-            'fetchUrl':url,
+            'fetchUrl':url
         }
         if title != None:
             upload_dict.update({'title':title})
@@ -129,7 +129,7 @@ class GfyClient(object):
         tags = kwargs.get('tags',None)
 
         upload_dict = {
-            'fetchUrl':url,
+            'fetchUrl':url
         }
         if title != None:
             upload_dict.update({'title':title})
