@@ -5,7 +5,7 @@ import requests
 import configparser
 import time
 import praw
-#import prawcore
+import prawcore
 import re
 from bs4 import BeautifulSoup
 import gfycat
@@ -143,7 +143,7 @@ def in_bad_list(sub_title):
             return False
 
 def main():
-    subreddit = reddit.subreddit('hockey')
+    subreddit = reddit.subreddit('pubattlegrounds')
     old_ids = old_submission_ids()
 
     try:
