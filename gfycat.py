@@ -132,7 +132,7 @@ class GfyClient(object):
             'fetchUrl':url
         }
         if title != None:
-            upload_dict.update({'title':title})
+            upload_dict.update({'title':title[:120]})
         if start != None:
             upload_dict.update({'cut':{'duration':duration,'start':start}})
         if tags != None:
