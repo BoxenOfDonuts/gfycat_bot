@@ -5,7 +5,7 @@ import requests
 import configparser
 import time
 import praw
-import prawcore
+#import prawcore
 import re
 from bs4 import BeautifulSoup
 import gfycat
@@ -125,9 +125,16 @@ def streamable_length(streamable_url):
     soup = BeautifulSoup(r.text,'lxml')
 
     html =  soup.find_all('script')
-    html_len = len(html) -3
+    #html_len = len(html) -4
 
-    streamable_len = html[html_len]['data-duration']
+    #streamable_len = html[html_len]['data-duration']
+
+    for tag in html:
+        try:
+            streamable_len = tag['data-duration']
+            break
+        except KeyError:
+            pass
 
     streamable_len = float(streamable_len)
 
@@ -143,25 +150,29 @@ def in_bad_list(sub_title):
             return False
 
 def main():
-    subreddit = reddit.subreddit('pubattlegrounds')
+    subreddits = ['hockey','pubattlegrounds']
+    #subreddit = reddit.subreddit('hockey')
     old_ids = old_submission_ids()
 
-    try:
+    for sub in subreddits:
+        subreddit = reddit.subreddit(sub)
 
-        for submission in subreddit.hot(limit=30):
-            if re.search('streamable', submission.url) != None and submission.id not in old_ids and not in_bad_list(submission.title):
-                gfy_name = upload(submission.title, submission.url, submission.subreddit)
+        try:
 
-                if check_status(gfy_name) == 'complete':
-                    old_ids.append(submission.id)
-                    replytopost(submission, gfy_name)
+            for submission in subreddit.hot(limit=30):
+                if re.search('streamable', submission.url) != None and submission.id not in old_ids and not in_bad_list(submission.title):
+                    gfy_name = upload(submission.title, submission.url, submission.subreddit)
 
-    except prawcore.exceptions.ServerError as e:
-        print('error with praw, sleeping then restarting')
-        time.sleep(10)
-    except prawcore.exceptions.RequestException as e:
-        print('request exception {}'.format(e))
-        time.sleep(10)
+                    if check_status(gfy_name) == 'complete':
+                        old_ids.append(submission.id)
+                        replytopost(submission, gfy_name)
+
+        except prawcore.exceptions.ServerError as e:
+            print('error with praw, sleeping then restarting')
+            time.sleep(10)
+        except prawcore.exceptions.RequestException as e:
+            print('request exception {}'.format(e))
+            time.sleep(10)
 
 
 reddit = praw_auth()
