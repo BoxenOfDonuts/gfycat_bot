@@ -5,7 +5,7 @@ import requests
 import configparser
 import time
 import praw
-#import prawcore
+import prawcore
 import re
 from bs4 import BeautifulSoup
 import gfycat
