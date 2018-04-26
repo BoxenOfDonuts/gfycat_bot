@@ -75,7 +75,7 @@ def old_submission_ids():
     # retieves old submission ids that commented on
     old_ids = []
     me = reddit.redditor('to_gfycat_bot')
-    for comment in me.comments.new(limit=30):
+    for comment in me.comments.new(limit=300):
         old_ids.append(comment.submission.id)
 
     print('retrieved old ids')
