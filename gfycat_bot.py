@@ -68,7 +68,8 @@ def check_if_commented(submisison):
     for comment in submisison.comments:
         if comment.author == 'to_gfycat_bot':
             return True
-        return False
+
+    return False
 
 
 def old_submission_ids():
