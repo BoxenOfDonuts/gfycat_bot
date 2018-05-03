@@ -10,6 +10,7 @@ import re
 from bs4 import BeautifulSoup
 import gfycat
 import os
+import sqlite3
 
 
 ###### Globals ######
@@ -17,8 +18,56 @@ import os
 bad_list = ['jay and dan']
 config = configparser.ConfigParser(interpolation=None)
 configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
+dbtable = 'commentids.db'
 
 ### end Globals #####
+
+class Connect(object):
+    """
+    DB connection class
+    """
+
+    def __init__(self):
+        db_user = config['sql']['username']
+        db_pass = config['sql']['password']
+        self.conn = sqlite3.connect(dbtable)
+        self.cur = self.conn.cursor()
+
+'''
+class Search(object):
+    oldIds = []
+
+    def __init__(self,commentid)
+        self.
+        self.commentid = commentid
+        db = Connect()
+        #cmd = 'select range.number from range where number = 7'
+        #cur.execute('select range.number from range where number = 7')
+        #7 in cur.fetchone() # returns true if value is there
+        cmd = 'select commentid from {} where commentid = {}'.format(dbtable,##Variable##)
+'''
+
+class Search():
+    comments = []
+    table = 'comments'
+
+    def __init__(self):
+        self.db = Connect()
+
+
+    def search(self,commentid):
+        self.commentid = commentid
+        cmd = 'select id from {} where id = {}'.format(table,commentid)
+        self.db.cur.execute(cmd)
+        self.result = commentid in self.db.cur.fetchone()
+        #return commentid in self.db.cur.fetchone()
+
+
+    def insert(self,value):
+        value = value,
+        cmd = 'INSERT into {} VALUES (?)'.format(table)
+        self.db.cur.execute(cmd, value)
+
 
 def gfy_auth():
     config.read(configfile)
