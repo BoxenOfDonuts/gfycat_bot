@@ -20,7 +20,7 @@ config = configparser.ConfigParser(interpolation=None)
 configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
 dbtable = 'comments.db'
 
-### end Globals #####
+#### end Globals #####
 
 
 class Connect(object):
@@ -50,8 +50,12 @@ class Search(object):
     def insert(self,value):
         value = value,
         cmd = 'INSERT into {} VALUES (?)'.format(self.table)
-        self.db.cur.execute(cmd, value)
-        self.db.conn.commit()
+        try:
+            self.db.cur.execute(cmd, value)
+            self.db.conn.commit()
+        except sqlite3.IntegrityError as e:
+            print('value already exists')
+            print(e)
 
 
 def gfy_auth():
@@ -133,6 +137,7 @@ def check_status(key):
 
     return response
 
+
 def replytopost(submission, gfy_name):
     # does what it looks like it does
     url = 'https://www.gfycat.com/' + gfy_name
@@ -154,6 +159,7 @@ def replytopost(submission, gfy_name):
         except:
             break
 
+
 def streamable_length(streamable_url):
     # get lenght of the streamable and returns it
     r = requests.get(streamable_url)
@@ -174,6 +180,7 @@ def streamable_length(streamable_url):
     streamable_len = float(streamable_len)
 
     return streamable_len
+
 
 def in_bad_list(sub_title):
     # checks to see if the title matches bad titles
@@ -208,6 +215,8 @@ def main():
             time.sleep(10)
 
     old_comments.db.conn.close()
+
+
 reddit = praw_auth()
 gfy_instance = gfy_auth()
 
