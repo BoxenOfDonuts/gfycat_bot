@@ -39,15 +39,17 @@ class Search(object):
         self.commentid = commentid
         cmd = "select commentid from {} where commentid = '{}'".format(self.table, commentid)
         self.db.cur.execute(cmd)
-        try:
-            self.result = commentid in self.db.cur.fetchone()
-        except TypeError:
-            self.result = False
-        #return commentid in self.db.cur.fetchone()
+        result = self.db.cur.fetchone()
+        if result is None:
+            return True
+        elif result is not None:
+            return False
+        else:
+            print('something happened')
 
     def insert(self,value):
         value = value,
-        cmd = 'INSERT into {} VALUES (?)'.format(table)
+        cmd = 'INSERT into {} VALUES (?)'.format(self.table)
         self.db.cur.execute(cmd, value)
         self.db.conn.commit()
 
@@ -184,20 +186,18 @@ def in_bad_list(sub_title):
 
 def main():
     subreddits = ['hockey','pubattlegrounds']
-    #subreddit = reddit.subreddit('hockey')
-    old_ids = old_submission_ids()
+    old_comments = Search()
 
     for sub in subreddits:
         subreddit = reddit.subreddit(sub)
 
         try:
-
             for submission in subreddit.hot(limit=30):
-                if re.search('streamable', submission.url) != None and submission.id not in old_ids and not in_bad_list(submission.title):
+                if re.search('streamable', submission.url) is not None and old_comments.search(submission.id) and not in_bad_list(submission.title):
                     gfy_name = upload(submission.title, submission.url, submission.subreddit)
 
                     if check_status(gfy_name) == 'complete':
-                        old_ids.append(submission.id)
+                        old_comments.insert(submission.id)
                         replytopost(submission, gfy_name)
 
         except prawcore.exceptions.ServerError as e:
@@ -207,7 +207,7 @@ def main():
             print('request exception {}'.format(e))
             time.sleep(10)
 
-
+    old_comments.db.conn.close()
 reddit = praw_auth()
 gfy_instance = gfy_auth()
 
