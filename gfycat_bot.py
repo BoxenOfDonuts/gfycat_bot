@@ -18,9 +18,10 @@ import sqlite3
 bad_list = ['jay and dan']
 config = configparser.ConfigParser(interpolation=None)
 configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
-dbtable = 'commentids.db'
+dbtable = 'comments.db'
 
 ### end Globals #####
+
 
 class Connect(object):
     """
@@ -51,15 +52,19 @@ class Search():
     comments = []
     table = 'comments'
 
+
     def __init__(self):
         self.db = Connect()
 
 
     def search(self,commentid):
         self.commentid = commentid
-        cmd = 'select id from {} where id = {}'.format(table,commentid)
+        cmd = "select commentid from {} where commentid = '{}'".format(self.table,commentid)
         self.db.cur.execute(cmd)
-        self.result = commentid in self.db.cur.fetchone()
+        try:
+            self.result = commentid in self.db.cur.fetchone()
+        except TypeError:
+            self.result = False
         #return commentid in self.db.cur.fetchone()
 
 
@@ -67,6 +72,7 @@ class Search():
         value = value,
         cmd = 'INSERT into {} VALUES (?)'.format(table)
         self.db.cur.execute(cmd, value)
+        self.db.conn.commit()
 
 
 def gfy_auth():
