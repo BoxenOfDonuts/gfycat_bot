@@ -10,6 +10,7 @@ import re
 from bs4 import BeautifulSoup
 import gfycat
 import os
+import sqlite3
 
 
 ###### Globals ######
@@ -17,8 +18,39 @@ import os
 bad_list = ['jay and dan']
 config = configparser.ConfigParser(interpolation=None)
 configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
+dbtable = 'comments.db'
 
 ### end Globals #####
+
+
+class Connect(object):
+    def __init__(self):
+        self.conn = sqlite3.connect(dbtable)
+        self.cur = self.conn.cursor()
+
+
+class Search(object):
+    table = 'comments'
+
+    def __init__(self):
+        self.db = Connect()
+
+    def search(self,commentid):
+        self.commentid = commentid
+        cmd = "select commentid from {} where commentid = '{}'".format(self.table, commentid)
+        self.db.cur.execute(cmd)
+        try:
+            self.result = commentid in self.db.cur.fetchone()
+        except TypeError:
+            self.result = False
+        #return commentid in self.db.cur.fetchone()
+
+    def insert(self,value):
+        value = value,
+        cmd = 'INSERT into {} VALUES (?)'.format(table)
+        self.db.cur.execute(cmd, value)
+        self.db.conn.commit()
+
 
 def gfy_auth():
     config.read(configfile)
@@ -68,14 +100,15 @@ def check_if_commented(submisison):
     for comment in submisison.comments:
         if comment.author == 'to_gfycat_bot':
             return True
-        return False
+
+    return False
 
 
 def old_submission_ids():
     # retieves old submission ids that commented on
     old_ids = []
     me = reddit.redditor('to_gfycat_bot')
-    for comment in me.comments.new(limit=300):
+    for comment in me.comments.new(limit=None):
         old_ids.append(comment.submission.id)
 
     print('retrieved old ids')
