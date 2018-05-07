@@ -18,7 +18,7 @@ import sqlite3
 bad_list = ['jay and dan']
 config = configparser.ConfigParser(interpolation=None)
 configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
-dbtable = 'comments.db'
+dbtable = os.path.join(os.path.dirname(__file__), 'comments.db')
 
 #### end Globals #####
 
@@ -53,6 +53,7 @@ class Search(object):
         try:
             self.db.cur.execute(cmd, value)
             self.db.conn.commit()
+            print('{} commited'.format(value))
         except sqlite3.IntegrityError as e:
             print('value already exists')
             print(e)
