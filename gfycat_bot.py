@@ -19,7 +19,7 @@ from logger import logger
 bad_list = ['jay and dan']
 config = configparser.ConfigParser(interpolation=None)
 configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
-dbtable = os.path.join(os.path.dirname(__file__), 'comments.db')
+dbtable = os.path.join(os.path.dirname(__file__), 'db/comments.db')
 
 #### end Globals #####
 
@@ -201,7 +201,7 @@ def main():
         subreddit = reddit.subreddit(sub)
 
         try:
-            for submission in subreddit.hot(limit=30):
+            for submission in subreddit.new(limit=30):
                 if re.search('streamable', submission.url) is not None and old_comments.search(submission.id) and not in_bad_list(submission.title):
                     gfy_name = upload(submission.title, submission.url, submission.subreddit)
 
