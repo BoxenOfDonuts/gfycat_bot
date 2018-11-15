@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import gfycat
 import os
 import sqlite3
+from logger import logger
 
 
 ###### Globals ######
@@ -45,7 +46,7 @@ class Search(object):
         elif result is not None:
             return False
         else:
-            print('something happened')
+            logger.error('something happened')
 
     def insert(self,value):
         value = value,
@@ -53,10 +54,9 @@ class Search(object):
         try:
             self.db.cur.execute(cmd, value)
             self.db.conn.commit()
-            print('{} commited'.format(value))
+            logger.info('commited', extra={'commentid', value})
         except sqlite3.IntegrityError as e:
-            print('value already exists')
-            print(e)
+            logger.error('value already exists', extra={'error': e})
 
 
 def gfy_auth():
@@ -66,7 +66,6 @@ def gfy_auth():
         username = config['gfycat']['username'],
         password = config['gfycat']['password']
     )
-
     return gfy_instance
 
 
@@ -77,7 +76,8 @@ def praw_auth():
                  user_agent='python:nourl:v0.01 by /u/BoxenOfDonuts',
                  username=config['praw']['username'],
                  password=config['praw']['password'])
-    print('logged into praw')
+
+    logger.info('Logged into PRAW')
 
     return reddit
 
@@ -118,7 +118,7 @@ def old_submission_ids():
     for comment in me.comments.new(limit=None):
         old_ids.append(comment.submission.id)
 
-    print('retrieved old ids')
+    logger.info('retrived old ids')
 
     return old_ids
 
@@ -148,14 +148,14 @@ def replytopost(submission, gfy_name):
     while True:
         try:
             submission.reply(message)
-            print('commented!')
+            logger.info('commented')
             break
         except praw.exceptions.APIException as e:
-            print('hit rate limit ' + e.message)
+            logger.error('hit rate limit', extra={'error': e})
             time.sleep(60)
             continue
         except prawcore.exceptions.Forbidden as e: # probably banned if I get this
-            print('praw exception ' + e.message)
+            logger.error('praw exception', extra={'error': e})
             break
         except:
             break
@@ -187,10 +187,11 @@ def in_bad_list(sub_title):
     # checks to see if the title matches bad titles
     for title in bad_list:
         if title in sub_title.lower():
-            print('streamable in do not comment list!')
+            logger.info('streamable in do not comment list!')
             return True
         else:
             return False
+
 
 def main():
     subreddits = ['hockey','pubattlegrounds']
@@ -209,10 +210,10 @@ def main():
                         replytopost(submission, gfy_name)
 
         except prawcore.exceptions.ServerError as e:
-            print('error with praw, sleeping then restarting')
+            logger.error('error with praw, sleeping then restarting')
             time.sleep(10)
         except prawcore.exceptions.RequestException as e:
-            print('request exception {}'.format(e))
+            logger.error('request exception', extra={'error': e})
             time.sleep(10)
 
     old_comments.db.conn.close()
