@@ -36,9 +36,9 @@ class GfyClient(object):
             self.access_token = r.json()['access_token']
             self.refresh_token = r.json()['refresh_token']
 
-            logger.info('retrieved access token')
+            logger.info('retrieved gfycat access token')
         except requests.exceptions.RequestException as e:
-            logger.info('could not get authenticate')
+            logger.info('could not authenticate to gfycat')
 
     def authorize_me(self):
 
