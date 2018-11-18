@@ -156,7 +156,7 @@ class GfyClient(object):
             if response == "encoding":
                 logger.info('encoding')
             elif response == 'complete':
-                logger.info('gfycat complete! Gfyname: {}'.format(key))
+                logger.info('gfycat complete!', extra={'gfyname': key})
             elif response == 'NotFoundo':
                 logger.error('gfycat not found, something went wrong')
             elif response == 'error':
