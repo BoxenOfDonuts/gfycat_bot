@@ -58,7 +58,6 @@ class Search(object):
         except sqlite3.IntegrityError as e:
             logger.error('value already exists', extra={'error': e})
 
-
 def gfy_auth():
     config.read(configfile)
     gfy_instance = gfycat.GfyClient(client_id = config['gfycat']['client_id'],
@@ -140,6 +139,7 @@ def check_status(key):
 
 
 def replytopost(submission, gfy_name):
+    logger.info('reply to post is started')
     # does what it looks like it does
     url = 'https://www.gfycat.com/' + gfy_name
     message = "[Gfycat Url]({})\n\n" \
@@ -206,8 +206,11 @@ def main():
                     gfy_name = upload(submission.title, submission.url, submission.subreddit)
 
                     if check_status(gfy_name) == 'complete':
-                        old_comments.insert(submission.id)
-                        replytopost(submission, gfy_name)
+                      logger.info('gfy is supposed to be complete now, comment messages should be seen soon', extra={'gfyname': gfy_name})
+                      old_comments.insert(submission.id)
+                      replytopost(submission, gfy_name)                   
+                    else:
+                      loger.error('check_status returned not complete', extra={'gfyname': gfy_name})
 
         except prawcore.exceptions.ServerError as e:
             logger.error('error with praw, sleeping then restarting')
