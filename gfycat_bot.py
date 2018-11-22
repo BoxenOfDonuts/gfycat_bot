@@ -39,11 +39,16 @@ class Search(object):
     def search(self,commentid):
         self.commentid = commentid
         cmd = "select commentid from {} where commentid = '{}'".format(self.table, commentid)
-        self.db.cur.execute(cmd)
+        try:
+            self.db.cur.execute(cmd)
+        except sqlite3.OperationalError as e:
+            logger.error('error occured searching for comment id', extra={'error': e, 'commentid': commentid})
         result = self.db.cur.fetchone()
         if result is None:
+            logger.info('commentid not found in db', extra={'commentid': commentid})
             return True
         elif result is not None:
+            logger.info('commentid found in db', extra={'commentid': commentid})
             return False
         else:
             logger.error('something happened')
@@ -54,9 +59,10 @@ class Search(object):
         try:
             self.db.cur.execute(cmd, value)
             self.db.conn.commit()
-            logger.info('commited', extra={'commentid', value})
         except sqlite3.IntegrityError as e:
             logger.error('value already exists', extra={'error': e})
+        except sqlite3.OperationalError as e:
+            logger.error('error inserting comment', extra={'error': e})
 
 def gfy_auth():
     config.read(configfile)
@@ -139,7 +145,6 @@ def check_status(key):
 
 
 def replytopost(submission, gfy_name):
-    logger.info('reply to post is started')
     # does what it looks like it does
     url = 'https://www.gfycat.com/' + gfy_name
     message = "[Gfycat Url]({})\n\n" \
@@ -148,7 +153,7 @@ def replytopost(submission, gfy_name):
     while True:
         try:
             submission.reply(message)
-            logger.info('commented')
+            logger.info('commented', extra={'gfyname': gfy_name, 'commentid': submission.id})
             break
         except praw.exceptions.APIException as e:
             logger.error('hit rate limit', extra={'error': e})
@@ -206,11 +211,10 @@ def main():
                     gfy_name = upload(submission.title, submission.url, submission.subreddit)
 
                     if check_status(gfy_name) == 'complete':
-                      logger.info('gfy is supposed to be complete now, comment messages should be seen soon', extra={'gfyname': gfy_name})
-                      old_comments.insert(submission.id)
-                      replytopost(submission, gfy_name)                   
+                        old_comments.insert(submission.id)
+                        replytopost(submission, gfy_name)                   
                     else:
-                      loger.error('check_status returned not complete', extra={'gfyname': gfy_name})
+                        loger.error('check_status returned not complete', extra={'gfyname': gfy_name})
 
         except prawcore.exceptions.ServerError as e:
             logger.error('error with praw, sleeping then restarting')
