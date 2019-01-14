@@ -154,15 +154,15 @@ class GfyClient(object):
             response = r.json()['task']
 
             if response == "encoding":
-                logger.info('encoding')
+                logger.info('encoding', extra={'gfycname': key})
             elif response == 'complete':
                 logger.info('gfycat complete!', extra={'gfyname': key})
             elif response == 'NotFoundo':
-                logger.error('gfycat not found, something went wrong')
+                logger.error('gfycat not found, something went wrong', extra={'gfyname': key})
             elif response == 'error':
-                logger.error('Something went wrong uploading url')
+                logger.error('Something went wrong uploading url', extra={'gfyname': key})
             else:
-                logger.error('unknown status')
+                logger.error('unknown status', extra={'gfyname': key})
                 response = 'error'
         except requests.exceptions.RequestException as e:
             logger.error('could not fetch url', extra={'error': e})
@@ -202,3 +202,4 @@ class GfyClient(object):
             return r.json()
         except requests.exceptions.RequestException as e:
             logger.error('error', extra={'error': e})
+
