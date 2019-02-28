@@ -167,7 +167,7 @@ def replytopost(submission, gfy_name):
 
 
 def streamable_length(streamable_url):
-    # get lenght of the streamable and returns it
+    # get length of the streamable and returns it
     r = requests.get(streamable_url)
     soup = BeautifulSoup(r.text,'lxml')
 
@@ -180,8 +180,8 @@ def streamable_length(streamable_url):
         try:
             streamable_len = tag['data-duration']
             break
-        except KeyError:
-            pass
+        except KeyError as e:
+            logger.error('KeyError getting streamable length', extra={'error': e})
 
     streamable_len = float(streamable_len)
 
