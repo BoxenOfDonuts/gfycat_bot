@@ -209,9 +209,11 @@ def main():
             for submission in subreddit.new(limit=30):
                 if re.search('streamable', submission.url) is not None and old_comments.search(submission.id) and not in_bad_list(submission.title):
                     gfy_name = upload(submission.title, submission.url, submission.subreddit)
+                    # double posting sometimes, putting in db first to stop that
+                    old_comments.inster(submission.id)
 
                     if check_status(gfy_name) == 'complete':
-                        old_comments.insert(submission.id)
+                        #old_comments.insert(submission.id)
                         replytopost(submission, gfy_name)                   
                     else:
                         loger.error('check_status returned not complete', extra={'gfyname': gfy_name})
