@@ -59,6 +59,7 @@ class Search(object):
         try:
             self.db.cur.execute(cmd, value)
             self.db.conn.commit()
+            logger.info('commentid commited', extra={'commentid': value[0]})
         except sqlite3.IntegrityError as e:
             logger.error('value already exists', extra={'error': e})
         except sqlite3.OperationalError as e:
@@ -181,7 +182,7 @@ def streamable_length(streamable_url):
             streamable_len = tag['data-duration']
             break
         except KeyError as e:
-            logger.error('KeyError getting streamable length', extra={'error': e})
+            pass
 
     streamable_len = float(streamable_len)
 
@@ -210,7 +211,7 @@ def main():
                 if re.search('streamable', submission.url) is not None and old_comments.search(submission.id) and not in_bad_list(submission.title):
                     gfy_name = upload(submission.title, submission.url, submission.subreddit)
                     # double posting sometimes, putting in db first to stop that
-                    old_comments.inster(submission.id)
+                    old_comments.insert(submission.id)
 
                     if check_status(gfy_name) == 'complete':
                         #old_comments.insert(submission.id)
