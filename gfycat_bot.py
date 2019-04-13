@@ -131,15 +131,20 @@ def old_submission_ids():
 
 def check_status(key):
     # check status of the upload
+    retries = 0
     response = gfy_instance.check_status(key)
     while response != 'complete':
         time.sleep(30)
         response = gfy_instance.check_status(key)
         if response == 'encoding':
+            retries += 1
             continue
         elif response == 'NotFoundo':
             break
         elif response == 'error' or not response:
+            break
+        elif retries == 10:
+            logger.error('Encoding took over 5 minutes, exiting', extra={'gfyname': key})
             break
 
     return response
@@ -217,7 +222,7 @@ def main():
                         #old_comments.insert(submission.id)
                         replytopost(submission, gfy_name)                   
                     else:
-                        loger.error('check_status returned not complete', extra={'gfyname': gfy_name})
+                        logger.error('check_status returned not complete', extra={'gfyname': gfy_name})
 
         except prawcore.exceptions.ServerError as e:
             logger.error('error with praw, sleeping then restarting')
