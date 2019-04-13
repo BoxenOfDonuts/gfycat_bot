@@ -3,10 +3,13 @@ import uuid
 from pythonjsonlogger import jsonlogger
 
 runID = str(uuid.uuid4())
+
+
 class UUIDFilter(logging.Filter):
     def filter(self, record):
         record.runID = runID
         return True
+
 
 LOGFILE = '/mnt/gfycat_bot/gfycat_bot.log'
 logHandler = logging.FileHandler(filename=LOGFILE)
