@@ -154,7 +154,7 @@ class GfyClient(object):
             response = r.json()['task']
 
             if response == "encoding":
-                logger.info('encoding', extra={'gfycname': key})
+                logger.info('encoding', extra={'gfyname': key})
             elif response == 'complete':
                 logger.info('gfycat complete!', extra={'gfyname': key})
             elif response == 'NotFoundo':
