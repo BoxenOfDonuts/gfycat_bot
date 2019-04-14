@@ -137,14 +137,15 @@ def check_status(key):
         time.sleep(30)
         response = gfy_instance.check_status(key)
         if response == 'encoding':
-            retries += 1
-            continue
+            if retries >= 10:
+                logger.error('Encoding took over 5 minutes, exiting', extra={'gfyname': key})
+                break
+            else:
+                retries += 1
+                continue
         elif response == 'NotFoundo':
             break
         elif response == 'error' or not response:
-            break
-        elif retries == 10:
-            logger.error('Encoding took over 5 minutes, exiting', extra={'gfyname': key})
             break
 
     return response
