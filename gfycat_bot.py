@@ -240,8 +240,11 @@ def main():
 
                     if check_status(gfy_name) == 'complete':
                         #old_comments.insert(submission.id)
-                        comment = get_comment_id(submission)
-                        replytopost(comment, gfy_name)
+                        if sub == 'hockey':
+                            comment = get_comment_id(submission)
+                            replytopost(comment, gfy_name)
+                        else:
+                            replytopost(submission, gfy_name)
                     else:
                         logger.error('check_status returned not complete', extra={'gfyname': gfy_name})
 
