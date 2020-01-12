@@ -151,16 +151,31 @@ def check_status(key):
     return response
 
 
-def replytopost(submission, gfy_name):
+def get_comment_id(submission):
+    if submission.comments[0].author == 'NHLConvertrRodriguez':
+        return submission.comments[0].id
+    # first comment wasn't the right one, have to find it now
+    else:
+        try:
+            for comment in submission.comments:
+                if comment.author == 'NHLConvertrRodriguez':
+                    return comment.id
+        except AttributeError:
+            logger.error('Could not find NHLConvertrRodriguez before having to load more comments')
+
+
+def replytopost(comment, gfy_name):
     # does what it looks like it does
     url = 'https://www.gfycat.com/' + gfy_name
     message = "[Gfycat Url]({})\n\n" \
                 "***\n\n" \
                 "^Why ^am ^I ^mirroring ^to ^gfycat? ^Because ^work ^blocks ^streamables".format(url)
+
+    # while true loop for retries
     while True:
         try:
-            submission.reply(message)
-            logger.info('commented', extra={'gfyname': gfy_name, 'commentid': submission.id})
+            comment.reply(message)
+            logger.info('commented', extra={'gfyname': gfy_name, 'commentid': comment.id})
             break
         except praw.exceptions.APIException as e:
             logger.error('hit rate limit', extra={'error': e})
@@ -221,7 +236,8 @@ def main():
 
                     if check_status(gfy_name) == 'complete':
                         #old_comments.insert(submission.id)
-                        replytopost(submission, gfy_name)                   
+                        comment = get_comment_id(submission)
+                        replytopost(comment, gfy_name)
                     else:
                         logger.error('check_status returned not complete', extra={'gfyname': gfy_name})
 
