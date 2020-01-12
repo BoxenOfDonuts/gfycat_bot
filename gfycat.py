@@ -127,7 +127,8 @@ class GfyClient(object):
         tags = kwargs.get('tags',None)
 
         upload_dict = {
-            'fetchUrl':url
+            'fetchUrl':url,
+            'keepAudio': True
         }
         if title != None:
             upload_dict.update({'title':title[:120]})
