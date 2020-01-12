@@ -153,15 +153,19 @@ def check_status(key):
 
 def get_comment_id(submission):
     if submission.comments[0].author == 'NHLConvertrRodriguez':
-        return submission.comments[0].id
+        return submission.comments[0]
     # first comment wasn't the right one, have to find it now
     else:
         try:
             for comment in submission.comments:
                 if comment.author == 'NHLConvertrRodriguez':
-                    return comment.id
+                    return comment
         except AttributeError:
             logger.error('Could not find NHLConvertrRodriguez before having to load more comments')
+
+    # if it winds up here then couldn't find the bot at all
+    logger.info('ALT sticky not found, replying to thread')
+    return submission.id
 
 
 def replytopost(comment, gfy_name):
