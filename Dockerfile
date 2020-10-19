@@ -1,4 +1,4 @@
-FROM hypriot/rpi-alpine:latest
+FROM alpine:latest
 
 # install Dependencies
 RUN apk update && apk add --no-cache python3
@@ -8,6 +8,6 @@ ADD . /gfycat
 WORKDIR /gfycat
 
 # install pip dependencies
-RUN pip3 install -r requirements.txt
+RUN apk update && apk add --no-cache python3 libxml2-dev libxslt-dev python3-dev g++
 
 CMD python3 gfycat_bot.py

@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 import gfycat
 import os
 import sqlite3
+from logger import logger
 
 
 ###### Globals ######
@@ -18,9 +19,9 @@ import sqlite3
 bad_list = ['jay and dan']
 config = configparser.ConfigParser(interpolation=None)
 configfile = os.path.join(os.path.dirname(__file__), 'config.ini')
-dbtable = 'comments.db'
+dbtable = os.path.join(os.path.dirname(__file__), 'db/comments.db')
 
-### end Globals #####
+#### end Globals #####
 
 
 class Connect(object):
@@ -38,21 +39,31 @@ class Search(object):
     def search(self,commentid):
         self.commentid = commentid
         cmd = "select commentid from {} where commentid = '{}'".format(self.table, commentid)
-        self.db.cur.execute(cmd)
+        try:
+            self.db.cur.execute(cmd)
+        except sqlite3.OperationalError as e:
+            logger.error('error occured searching for comment id', extra={'error': e, 'commentid': commentid})
         result = self.db.cur.fetchone()
         if result is None:
+            logger.info('commentid not found in db', extra={'commentid': commentid})
             return True
         elif result is not None:
+            logger.info('commentid found in db', extra={'commentid': commentid})
             return False
         else:
-            print('something happened')
+            logger.error('something happened')
 
     def insert(self,value):
         value = value,
         cmd = 'INSERT into {} VALUES (?)'.format(self.table)
-        self.db.cur.execute(cmd, value)
-        self.db.conn.commit()
-
+        try:
+            self.db.cur.execute(cmd, value)
+            self.db.conn.commit()
+            logger.info('commentid commited', extra={'commentid': value[0]})
+        except sqlite3.IntegrityError as e:
+            logger.error('value already exists', extra={'error': e})
+        except sqlite3.OperationalError as e:
+            logger.error('error inserting comment', extra={'error': e})
 
 def gfy_auth():
     config.read(configfile)
@@ -61,7 +72,6 @@ def gfy_auth():
         username = config['gfycat']['username'],
         password = config['gfycat']['password']
     )
-
     return gfy_instance
 
 
@@ -72,7 +82,8 @@ def praw_auth():
                  user_agent='python:nourl:v0.01 by /u/BoxenOfDonuts',
                  username=config['praw']['username'],
                  password=config['praw']['password'])
-    print('logged into praw')
+
+    logger.info('Logged into PRAW')
 
     return reddit
 
@@ -113,19 +124,25 @@ def old_submission_ids():
     for comment in me.comments.new(limit=None):
         old_ids.append(comment.submission.id)
 
-    print('retrieved old ids')
+    logger.info('retrived old ids')
 
     return old_ids
 
 
 def check_status(key):
     # check status of the upload
+    retries = 0
     response = gfy_instance.check_status(key)
     while response != 'complete':
         time.sleep(30)
         response = gfy_instance.check_status(key)
         if response == 'encoding':
-            continue
+            if retries >= 10:
+                logger.error('Encoding took over 5 minutes, exiting', extra={'gfyname': key})
+                break
+            else:
+                retries += 1
+                continue
         elif response == 'NotFoundo':
             break
         elif response == 'error' or not response:
@@ -133,29 +150,50 @@ def check_status(key):
 
     return response
 
-def replytopost(submission, gfy_name):
+
+def get_comment_id(submission):
+    if submission.comments[0].author == 'NHLConvertrRodriguez':
+        return submission.comments[0]
+    # first comment wasn't the right one, have to find it now
+    else:
+        try:
+            for comment in submission.comments:
+                if comment.author == 'NHLConvertrRodriguez':
+                    return comment
+        except AttributeError:
+            logger.error('Could not find NHLConvertrRodriguez before having to load more comments')
+
+    # if it winds up here then couldn't find the bot at all
+    logger.info('ALT sticky not found, replying to thread')
+    return submission.id
+
+
+def replytopost(comment, gfy_name):
     # does what it looks like it does
     url = 'https://www.gfycat.com/' + gfy_name
     message = "[Gfycat Url]({})\n\n" \
                 "***\n\n" \
                 "^Why ^am ^I ^mirroring ^to ^gfycat? ^Because ^work ^blocks ^streamables".format(url)
+
+    # while true loop for retries
     while True:
         try:
-            submission.reply(message)
-            print('commented!')
+            comment.reply(message)
+            logger.info('commented', extra={'gfyname': gfy_name, 'commentid': comment.id})
             break
         except praw.exceptions.APIException as e:
-            print('hit rate limit ' + e.message)
+            logger.error('hit rate limit', extra={'error': e})
             time.sleep(60)
             continue
         except prawcore.exceptions.Forbidden as e: # probably banned if I get this
-            print('praw exception ' + e.message)
+            logger.error('praw exception', extra={'error': e})
             break
         except:
             break
 
+
 def streamable_length(streamable_url):
-    # get lenght of the streamable and returns it
+    # get length of the streamable and returns it
     r = requests.get(streamable_url)
     soup = BeautifulSoup(r.text,'lxml')
 
@@ -168,21 +206,23 @@ def streamable_length(streamable_url):
         try:
             streamable_len = tag['data-duration']
             break
-        except KeyError:
+        except KeyError as e:
             pass
 
     streamable_len = float(streamable_len)
 
     return streamable_len
 
+
 def in_bad_list(sub_title):
     # checks to see if the title matches bad titles
     for title in bad_list:
         if title in sub_title.lower():
-            print('streamable in do not comment list!')
+            logger.info('streamable in do not comment list!')
             return True
         else:
             return False
+
 
 def main():
     subreddits = ['hockey','pubattlegrounds']
@@ -192,22 +232,32 @@ def main():
         subreddit = reddit.subreddit(sub)
 
         try:
-            for submission in subreddit.hot(limit=30):
+            for submission in subreddit.new(limit=30):
                 if re.search('streamable', submission.url) is not None and old_comments.search(submission.id) and not in_bad_list(submission.title):
                     gfy_name = upload(submission.title, submission.url, submission.subreddit)
+                    # double posting sometimes, putting in db first to stop that
+                    old_comments.insert(submission.id)
 
                     if check_status(gfy_name) == 'complete':
-                        old_comments.insert(submission.id)
-                        replytopost(submission, gfy_name)
+                        #old_comments.insert(submission.id)
+                        if sub == 'hockey':
+                            comment = get_comment_id(submission)
+                            replytopost(comment, gfy_name)
+                        else:
+                            replytopost(submission, gfy_name)
+                    else:
+                        logger.error('check_status returned not complete', extra={'gfyname': gfy_name})
 
         except prawcore.exceptions.ServerError as e:
-            print('error with praw, sleeping then restarting')
+            logger.error('error with praw, sleeping then restarting')
             time.sleep(10)
         except prawcore.exceptions.RequestException as e:
-            print('request exception {}'.format(e))
+            logger.error('request exception', extra={'error': e})
             time.sleep(10)
 
     old_comments.db.conn.close()
+
+
 reddit = praw_auth()
 gfy_instance = gfy_auth()
 

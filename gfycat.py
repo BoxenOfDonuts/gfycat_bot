@@ -1,5 +1,6 @@
 import requests
 import time
+from logger import logger
 
 auth_url = 'https://api.gfycat.com/v1/oauth/token'
 upload_url = 'https://api.gfycat.com/v1/gfycats'
@@ -34,10 +35,10 @@ class GfyClient(object):
             r = requests.post(auth_url, json=oauth)
             self.access_token = r.json()['access_token']
             self.refresh_token = r.json()['refresh_token']
-            print('retrieved access token')
-        except requests.exceptions.RequestException as e:
-            print('could not get authenticate')
 
+            logger.info('retrieved gfycat access token')
+        except requests.exceptions.RequestException as e:
+            logger.info('could not authenticate to gfycat')
 
     def authorize_me(self):
 
@@ -52,10 +53,9 @@ class GfyClient(object):
             r = requests.post(auth_url, json=oauth)
             self.access_token = r.json()['access_token']
             self.refresh_token = r.json()['refresh_token']
-            print('retrieved access token')
+            logger.info('retrieved access token')
         except requests.exceptions.RequestException as e:
-            print('could not get authenticate')
-
+            logger.error('could not get authenticate')
 
     def reauthorize_me(self):
         # to be implemented
@@ -71,10 +71,9 @@ class GfyClient(object):
             r = requests.post(auth_url, json=oauth)
             self.access_token = r.json()['access_token']
             self.refresh_token = r.json()['refresh_token']
-            print('refreshed access token')
+            logger.info('refreshed access token')
         except requests.exceptions.RequestException as e:
-            print('could not authenticate')
-
+            logger.error('could not authenticate')
 
     def upload_from_file(self, file, **kwargs):
         self.file = file
@@ -97,14 +96,14 @@ class GfyClient(object):
             r = requests.post('https://api.gfycat.com/v1/gfycats',headers=header,json=upload_dict)
             key = r.json()['gfyname']
         except requests.exceptions.RequestException as e:
-            print('could not get key')
-            print('exception: {}'.format(e))
+            logger.error('could not get key')
+            logger.error('exception', extra={'error': e})
             return
 
         try:
             r = requests.post('https://filedrop.gfycat.com',files={'file': open(file,'rb')},data={'key':key})
         except requests.exceptions.RequestException as e:
-            print('could not upload file')
+            logger.error('could not upload file', extra={'error': e})
 
         time.sleep(5)
         try:
@@ -112,24 +111,24 @@ class GfyClient(object):
             r = requests.get(status_url)
             if r.json()['md5Found'] == 1:
                 key = r.json()['gfyname']
-                print('md5 found, using that name')
+                logger.info('md5 found, using that name')
             else:
-                print('no key found')
+                logger.error('no key found')
         except requests.exceptions.RequestException as e:
-            print('something went wrong')
+            logger.error('something went wrong', extra={'error': e})
 
         return key
-
 
     def upload_from_url(self, url, **kwargs):
         self.url = url
         title = kwargs.get('title',None)
-        start  = kwargs.get('start',None)
-        duration  = kwargs.get('duration',None)
+        start = kwargs.get('start',None)
+        duration = kwargs.get('duration',None)
         tags = kwargs.get('tags',None)
 
         upload_dict = {
-            'fetchUrl':url
+            'fetchUrl':url,
+            'keepAudio': True
         }
         if title != None:
             upload_dict.update({'title':title[:120]})
@@ -143,12 +142,11 @@ class GfyClient(object):
         try:
             r = requests.post(upload_url, headers=header, json=upload_dict)
             key = r.json()['gfyname']
-            print('upload sucessfull')
+            logger.info('upload sucessfull')
         except requests.exceptions.RequestException as e:
-            print('could not fetch url')
+            logger.error('could not fetch url', extra={'error': e})
 
         return key
-
 
     def check_status(self, key):
         status_url = root_status_url + key
@@ -157,22 +155,21 @@ class GfyClient(object):
             response = r.json()['task']
 
             if response == "encoding":
-                print('encoding')
+                logger.info('encoding', extra={'gfyname': key})
             elif response == 'complete':
-                print('gfycat complete! Gfyname: {}'.format(key))
+                logger.info('gfycat complete!', extra={'gfyname': key})
             elif response == 'NotFoundo':
-                print('gfycat not found, something went wrong')
+                logger.error('gfycat not found, something went wrong', extra={'gfyname': key})
             elif response == 'error':
-                print('Something went wrong uploading url')
+                logger.error('Something went wrong uploading url', extra={'gfyname': key})
             else:
-                print('unknwn status')
+                logger.error('unknown status', extra={'gfyname': key})
                 response = 'error'
         except requests.exceptions.RequestException as e:
-            print('could not fetch url')
+            logger.error('could not fetch url', extra={'error': e})
             response = 'error'
 
         return response
-
 
     def delete_gfy(self, key):
         # need gfyname, not link
@@ -184,10 +181,9 @@ class GfyClient(object):
             if r.text:
                 return r.json()['errorMessage']['description']
             else:
-                print("Deleted Gfy")
+                logger.info("Deleted Gfy")
         except requests.exceptions.RequestException as e:
-            print('error')
-
+            logger.error('error', extra={'error': e})
 
     def check_gfy(self, key):
         # need gfyname, not full link
@@ -196,8 +192,7 @@ class GfyClient(object):
             r = requests.get(url)
             return r.json()
         except requests.exceptions.RequestException as e:
-            print('error getting url')
-
+            logger.error('error getting url', extra={'error': e})
 
     # Don't think this works anymore
     def check_url(self, url):
@@ -207,4 +202,5 @@ class GfyClient(object):
             r = requests.get(url)
             return r.json()
         except requests.exceptions.RequestException as e:
-            print('error')
+            logger.error('error', extra={'error': e})
+
